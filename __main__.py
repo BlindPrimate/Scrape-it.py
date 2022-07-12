@@ -1,24 +1,13 @@
-
-import sys
-from scaper import Scraper
-
-
+import os
+import yaml
+from scraper import Scraper
 
 
+CONFIG_PATH = os.path.join(".", "configuration")
 
-def return_links(page):
-    # pulls html text from page 
-    page = requests.get(page)
 
-    if page.status_code == 200:
-
-        page = html.fromstring(page.text)
-
-        urls = page.xpath('//a/@href')
-        return urls
-    else:
-        print('Bad response from server.')
-        sys.exit()
+with open(os.path.join(CONFIG_PATH, "praw_config.yml"), "r") as f:
+    CONFIG = yaml.safe_load(f)
 
 
 
@@ -40,8 +29,8 @@ if __name__ == '__main__':
         args.root_directory += '/'
 
 
-    reddit_scraper = Scraper(args.subreddit)
+    reddit_scraper = Scraper(CONFIG, args.subreddit)
 
-    reddit_scraper.save_top_pics(args.subreddit, args.root_directory)
+    # reddit_scraper.save_top_pics(args.subreddit, args.root_directory)
 
 

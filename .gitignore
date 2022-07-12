@@ -1,1 +1,6 @@
+# IDE
 .idea/
+
+# config
+configuration/*
+!configuration/*-sample.yml

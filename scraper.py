@@ -1,17 +1,20 @@
+from dataclasses import dataclass
 import sys
 import requests
 from lxml import html
+import praw
 
 from helper_functions import save_image
 
-
+    
 
 class Scraper:
     _image_exts = ['.jpg', '.jpeg', '.gif', '.png']
 
-    def __init__(self, subreddit: str) -> None:
+    def __init__(self, config: dict, subreddit: str) -> None:
         self.subreddit = subreddit
         self.images_urls = None
+        self.api = praw.Reddit(**config)
 
     def is_image(self, url):
         """ Takes a url as a string and returns a True for those that are images, False for those
