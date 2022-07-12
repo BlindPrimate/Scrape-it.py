@@ -3,17 +3,20 @@ import yaml
 from scraper import Scraper
 
 
-CONFIG_PATH = os.path.join(".", "configuration")
 
 
-with open(os.path.join(CONFIG_PATH, "praw_config.yml"), "r") as f:
-    CONFIG = yaml.safe_load(f)
+
 
 
 
 if __name__ == '__main__':
     import argparse
     import os
+
+    CONFIG_PATH = os.path.join(".", "configuration")
+
+    with open(os.path.join(CONFIG_PATH, "praw_config.yml"), "r") as f:
+        CONFIG = yaml.safe_load(f)
 
     # builds command line arguments
     parser = argparse.ArgumentParser()
@@ -30,6 +33,12 @@ if __name__ == '__main__':
 
 
     reddit_scraper = Scraper(CONFIG, args.subreddit)
+
+    top = reddit_scraper.get_top_image_submissions('week')
+    reddit_scraper.save_pics_to(top)
+
+
+        
 
     # reddit_scraper.save_top_pics(args.subreddit, args.root_directory)
 

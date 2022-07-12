@@ -1,6 +1,12 @@
 # IDE
 .idea/
+.vscode/
 
 # config
 configuration/*
 !configuration/*-sample.yml
+
+
+# pycache
+*.pyc
+__pycache__/

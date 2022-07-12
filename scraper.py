@@ -1,58 +1,54 @@
 from dataclasses import dataclass
+import re
 import sys
 import requests
 from lxml import html
+import os
 import praw
 
-from helper_functions import save_image
+from helper_functions import get_image_from_url, save_image
+
 
     
 
 class Scraper:
-    _image_exts = ['.jpg', '.jpeg', '.gif', '.png']
+    # _image_exts = ['.jpg', '.jpeg', '.gif', '.png']
+    _regex_image_exts = re.compile(r'.(jpg|jpeg|gif|png)$')
+    _regex_image_galleries = re.compile(r'gallery\/(.*)')
 
-    def __init__(self, config: dict, subreddit: str) -> None:
+    def __init__(self, api_config: dict, subreddit: str) -> None:
         self.subreddit = subreddit
-        self.images_urls = None
-        self.api = praw.Reddit(**config)
+        self._images_urls = None
+        self._api = praw.Reddit(**api_config)
+        self._subreddit = self._api.subreddit(subreddit)
 
-    def is_image(self, url):
-        """ Takes a url as a string and returns a True for those that are images, False for those
+    def is_gallery_or_image(self, url: str) -> bool:
+        """ Takes a url as a string and returns a True for those that are images and galleries, False for those
         that are not """
-        if any(image_ext in url for image_ext in self._image_exts):
+        if self._regex_image_exts.search(url) or self._regex_image_galleries.search(url):
             return True
         return False
 
-    def get_image_urls(self, url):
-        # pulls html text from url 
-        response = requests.get(url)
+    def get_top_submissions(self, time_span: str):
+        return self._subreddit.top(time_span)
 
-        # checks for good response from server
-        if response.status_code == 200:
-            # converst html into xml 
-            print(response.text)
-            page = html.fromstring(response.text)
-            
-            # creates list of all post title links
-            urls = page.xpath('//p[@class="title"]/a/@href')
+    def get_top_image_submissions(self, time_span: str) -> dict:
+        submissions = self.get_top_submissions(time_span)
+        return [i for i in submissions if self.is_gallery_or_image(i.url)]
 
-            # checks to see which of the urls are galleries and scrapes the image
-            # links of those that are
-            image_urls = []
-            for url in urls:
-                if self.is_image(url):
-                    image_urls.append(url)                      
-                else:
-                    image_urls.extend(self.get_imgur_gallery_links(url))
-            return image_urls 
-        else:
-            print('Bad response from reddit server.')
-            sys.exit()
+    def _compile_image_links(self, submissions) -> list:
+        results = []
+        for submission in submissions:
+            if self._regex_image_exts.search(submission.url):
+                results.append(submission.url)
+            elif self._regex_image_galleries.search(submission.url):
+                gallery_images = self._get_imgur_gallery_links(submission.url)
+                results.append(gallery_images)
 
-            
-    def get_imgur_gallery_links(self, gallery_address):
+
+    def _get_imgur_gallery_links(self, gallery_address: str):
         """ Takes an imgur gallery address and returns a list of all image urls in the gallery"""
-        image_urls = []
+        print(gallery_address)
         gallery = requests.get(gallery_address)
 
         if gallery.status_code == 200:
@@ -66,22 +62,10 @@ class Scraper:
             sys.exit()
 
 
-    def save_top_pics(self, subreddit, save_dir):
-        urls = self.get_image_urls('http://www.reddit.com/r/' + subreddit + '/top')
-        print('Saving ' + str(len(urls)) + ' images...')
-        # iterates through image_urls and saves each image
-        count = 0
-        for i in urls:
-            while not self.is_image(i):
-                i = i[:-1]
-            count += 1
-            image_file = requests.get(i)
-            filename = 'image-' + str(count)
-            if i.endswith('.jpg'):
-                save_image(save_dir, image_file.content, filename, '.jpg')
-            elif i.endswith('.jpeg'):
-                save_image(save_dir, image_file.content, filename, '.jpeg')
-            elif i.endswith('.gif'):
-                save_image(save_dir, image_file.content, filename, '.gif')
-            elif i.endswith('.png'):
-                save_image(save_dir, image_file.content, filename, '.png')
+    def save_pics_to(self, submissions: list, save_dir: str="./images"):
+        compiled_subs = self._compile_image_links(submissions)
+        for submission in compiled_subs:
+            image = get_image_from_url(submission.url)
+            extension = self._regex_image_exts.match(submission.url)
+            save_directory = os.path.join(save_dir, extension)
+            save_image(save_dir, image, submission.name, save_directory)

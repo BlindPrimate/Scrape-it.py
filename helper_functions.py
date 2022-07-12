@@ -1,4 +1,5 @@
 import os
+import requests
 
 def save_image(directory, image_file, image_name, image_extension):
     file_path = os.path.join(directory, f'{image_name}.{image_extension}')
@@ -6,3 +7,9 @@ def save_image(directory, image_file, image_name, image_extension):
     f.write(image_file)
     f.close()
     print('Saving image as ' + file_path)
+
+
+def get_image_from_url(url: str) -> bytes:
+    image_file = requests.get(url)
+    return image_file.content
+
