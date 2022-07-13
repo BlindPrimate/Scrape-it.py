@@ -1,13 +1,8 @@
-from dataclasses import dataclass
 import re
-import sys
-import requests
-from lxml import html
 import os
 import praw
 
 from helper_functions import get_image_from_url, make_dir_if_not_exist, save_image
-
 
     
 

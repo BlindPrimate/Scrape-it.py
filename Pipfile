@@ -5,7 +5,6 @@ name = "pypi"
 
 [packages]
 requests = "*"
-lxml = "*"
 praw = "*"
 pyyaml = "*"
 ndg-httpsclient = "*"
