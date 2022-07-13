@@ -8,6 +8,7 @@ requests = "*"
 lxml = "*"
 praw = "*"
 pyyaml = "*"
+ndg-httpsclient = "*"
 
 [dev-packages]
 

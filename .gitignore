@@ -6,6 +6,8 @@
 configuration/*
 !configuration/*-sample.yml
 
+images/
+
 
 # pycache
 *.pyc

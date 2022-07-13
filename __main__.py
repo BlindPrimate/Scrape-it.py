@@ -5,10 +5,6 @@ from scraper import Scraper
 
 
 
-
-
-
-
 if __name__ == '__main__':
     import argparse
     import os
@@ -36,9 +32,6 @@ if __name__ == '__main__':
 
     top = reddit_scraper.get_top_image_submissions('week')
     reddit_scraper.save_pics_to(top)
-
-
-        
 
     # reddit_scraper.save_top_pics(args.subreddit, args.root_directory)
 
