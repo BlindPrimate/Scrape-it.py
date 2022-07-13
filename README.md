@@ -12,11 +12,11 @@ Currently, the only required argument is the target subreddit.( -s )   A target 
 
 ##### Examples
 
->$ python scrape-it.py -s aww -d /users/JohnDoe/reddit-images/
+>$ python . -s aww -d /users/JohnDoe/reddit-images/
 
 Result: All images from /r/aww subreddit will be saved in the directory '/users/JohnDoe/reddit-images/
 
->$ python scrape-it.py -s funny
+>$ python . -s funny
 
 Result:  All images from /r/funny subreddit will be save in the current working directory.
 
