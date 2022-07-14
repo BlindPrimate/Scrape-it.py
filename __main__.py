@@ -1,13 +1,12 @@
-import os
-import yaml
-from scraper import Scraper
+from scraper import *
 
 
 
 
 if __name__ == '__main__':
-    import argparse
     import os
+    import argparse
+    import yaml
 
     CONFIG_PATH = os.path.join(".", "configuration")
 
@@ -28,7 +27,7 @@ if __name__ == '__main__':
         args.root_directory += '/'
 
 
-    reddit_scraper = Scraper(CONFIG, args.subreddit)
+    reddit_scraper = Scraper(CONFIG, args.subreddit, logging=True)
 
     top = reddit_scraper.get_top_image_submissions('week')
     reddit_scraper.save_pics_to(top)

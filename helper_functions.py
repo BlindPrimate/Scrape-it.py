@@ -9,10 +9,10 @@ def make_dir_if_not_exist(dir: str) -> None:
 def save_image(directory: str, image_file: bytes, image_name: str, image_extension: str) -> None:
     """Saves image to directory."""
     file_path = os.path.join(directory, f'{image_name}{image_extension}')
+    print(f'Saving iamge as {file_path}')
     f = open(file_path, 'wb')
     f.write(image_file)
     f.close()
-    print('Saving image as ' + file_path)
 
 def get_image_from_url(url: str) -> bytes:
     """Retrieve image bytes from given URL."""

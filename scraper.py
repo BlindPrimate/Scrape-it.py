@@ -12,14 +12,14 @@ class Scraper:
     Args:
         api_config (dict): dictionary object containing basic auth data for reddit API
         subreddit (str): target subreddit
-        logging_enabled (bool): enable logging
+        logging (bool): enable logging
     
     """
     _regex_image_exts = re.compile(r'.(jpg|jpeg|gif|png)')
 
-    def __init__(self, api_config: dict, subreddit: str, logging_enabled=False) -> None:
+    def __init__(self, api_config: dict, subreddit: str, logging=False) -> None:
         self.subreddit = subreddit
-        self.logging_enabled = logging_enabled
+        self._logging = logging
         self._api = praw.Reddit(**api_config)
         self._subreddit = self._api.subreddit(subreddit)
 
@@ -37,6 +37,8 @@ class Scraper:
     def get_top_image_submissions(self, time_span: str) -> dict:
         """Pull top submission objects that are images from the subreddit."""
         submissions = self.get_top_submissions(time_span)
+        if self._logging:
+            print("Retreiving images...")
         return [i for i in submissions if self.is_gallery_or_image(i)]
 
 
@@ -73,3 +75,6 @@ class Scraper:
             extension = self._regex_image_exts.search(url)
             filename =  extension.group(0)
             save_image(save_dir, image, name, filename)
+
+        if self._logging:
+            print(f'Save complete.  All images located at {save_dir}')
