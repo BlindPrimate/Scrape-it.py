@@ -1,5 +1,6 @@
 import os
 import requests
+from time import perf_counter
 
 def make_dir_if_not_exist(dir: str) -> None:
     """Checks if provided directory exists and if not, creates it."""
@@ -19,3 +20,11 @@ def get_image_from_url(url: str) -> bytes:
     image_file = requests.get(url)
     return image_file.content
 
+def performance_check(func):
+    start_t = perf_counter()
+    def inner(*args, **kwargs):
+        result = func(*args, **kwargs)
+        end_t = perf_counter()
+        print(func.__name__, end_t-start_t)
+        return result
+    return inner

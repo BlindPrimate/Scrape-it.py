@@ -1,9 +1,9 @@
 import re
 import os
 import praw
-from concurrent.futures import ThreadPoolExecutor
+import multiprocessing as mp
 
-from helper_functions import get_image_from_url, make_dir_if_not_exist, save_image
+from helper_functions import get_image_from_url, make_dir_if_not_exist, performance_check, save_image
 
 
 class Scraper:
@@ -52,37 +52,34 @@ class Scraper:
 
         for count, url in enumerate(urls):
             # number images coming from the same gallery
-            submission_name = f'{submission.name}-{count}'
-            tup = (submission_name, url)
+            tup = (submission.name, url)
             images.append(tup)
         return images
 
-
-    def _compile_submissions(self, submissions):
+    def _compile_submission(self, submission):
         images = []
-        for submission in submissions:
-            if hasattr(submission, 'is_gallery'):
-                gallery_images = self._get_gallery_urls(submission)
-                images.extend(gallery_images)
-            else:
-                tup = (submission.name, submission.url)
-                images.append(tup)
+        try:
+            gallery = submission.is_gallery
+            gallery_images = self._get_gallery_urls(submission)
+            images.extend(gallery_images)
+        except AttributeError:
+            tup = (submission.name, submission.url)
+            images.append(tup)
         return images
 
     def save_pics_to(self, submissions: list, save_dir: str=os.path.join('.', 'images')):
         """Save submission images to file system."""
         make_dir_if_not_exist(save_dir)
-        image_subs = self._compile_submissions(submissions)
 
 
-        # multithread all the picture requests for faster retrieval
-        with ThreadPoolExecutor(6) as executor:
-            images = [executor.submit(get_image_from_url, url) for name, url in image_subs]
-            # process and save images
+        pool = mp.Pool(4)
+        image_urls = pool.map(self._compile_submission, submissions)
 
-            for i in range(len(image_subs)):
-                name, url = image_subs[i]
-                image = images[i].result()
+        # process and save images
+        for url_list in image_urls:
+            for url_tup in url_list:
+                name, url = url_tup
+                image = get_image_from_url(url)
                 extension = self._regex_image_exts.search(url)
                 filename =  extension.group(0)
                 save_image(save_dir, image, name, filename)
