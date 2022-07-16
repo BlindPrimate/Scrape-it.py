@@ -1,4 +1,5 @@
 from scraper import *
+from time import perf_counter
 
 
 
@@ -27,10 +28,20 @@ if __name__ == '__main__':
         args.root_directory += '/'
 
 
+    start_t = perf_counter()
+
+
     reddit_scraper = Scraper(CONFIG, args.subreddit, logging=True)
 
+    start_image_ret = perf_counter()
     top = reddit_scraper.get_top_image_submissions('week')
+    end_image_ret = perf_counter()
+    print("iamge retreive: ", end_image_ret - start_image_ret)
     reddit_scraper.save_pics_to(top)
+
+    end_t = perf_counter()
+
+    print(end_t - start_t)
 
 
 

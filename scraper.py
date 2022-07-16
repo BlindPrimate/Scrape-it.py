@@ -1,6 +1,7 @@
 import re
 import os
 import praw
+from concurrent.futures import ThreadPoolExecutor
 
 from helper_functions import get_image_from_url, make_dir_if_not_exist, save_image
 
@@ -42,7 +43,7 @@ class Scraper:
         return [i for i in submissions if self.is_gallery_or_image(i)]
 
 
-    def get_gallery_images(self, submission):
+    def _get_gallery_urls(self, submission):
         """Retreive gallery images contained in a gallery submission object."""
         images = []
 
@@ -52,29 +53,39 @@ class Scraper:
         for count, url in enumerate(urls):
             # number images coming from the same gallery
             submission_name = f'{submission.name}-{count}'
-            tup = (submission_name, url, get_image_from_url(url))
+            tup = (submission_name, url)
             images.append(tup)
         return images
 
 
+    def _compile_submissions(self, submissions):
+        images = []
+        for submission in submissions:
+            if hasattr(submission, 'is_gallery'):
+                gallery_images = self._get_gallery_urls(submission)
+                images.extend(gallery_images)
+            else:
+                tup = (submission.name, submission.url)
+                images.append(tup)
+        return images
+
     def save_pics_to(self, submissions: list, save_dir: str=os.path.join('.', 'images')):
         """Save submission images to file system."""
         make_dir_if_not_exist(save_dir)
-        images = []
-        for submission in submissions:
-            # check if submission is gallery or direct image and handle
-            if hasattr(submission, 'is_gallery'):
-                gallery_images = self.get_gallery_images(submission)
-                images.extend(gallery_images)
-            else:
-                tup = (submission.name, submission.url, get_image_from_url(submission.url))
-                images.append(tup)
-        
-        # process and save images
-        for name, url, image in images:
-            extension = self._regex_image_exts.search(url)
-            filename =  extension.group(0)
-            save_image(save_dir, image, name, filename)
+        image_subs = self._compile_submissions(submissions)
+
+
+        # multithread all the picture requests for faster retrieval
+        with ThreadPoolExecutor(6) as executor:
+            images = [executor.submit(get_image_from_url, url) for name, url in image_subs]
+            # process and save images
+
+            for i in range(len(image_subs)):
+                name, url = image_subs[i]
+                image = images[i].result()
+                extension = self._regex_image_exts.search(url)
+                filename =  extension.group(0)
+                save_image(save_dir, image, name, filename)
 
         if self._logging:
             print(f'Save complete.  All images located at {save_dir}')
