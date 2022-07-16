@@ -57,6 +57,7 @@ class Scraper:
         return images
 
     def _compile_submission(self, submission):
+        """Deterine if submission is gallery or image and return appropriate urls"""
         images = []
         try:
             gallery = submission.is_gallery
